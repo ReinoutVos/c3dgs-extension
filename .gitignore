@@ -8,4 +8,3 @@ models/
 **/build/
 **/*.so
 scripts/
-datasets/
