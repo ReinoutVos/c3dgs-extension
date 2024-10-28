@@ -1,0 +1,20 @@
+name: c3dgs_test
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
+  - pyg
+dependencies:
+  - plyfile=0.8.1
+  - python=3.8
+  - pip=22.3.1
+  - pytorch-cuda=12.1
+  - cuda-toolkit=12.1
+  - cuda-compiler=12.1
+  - cuda-nvcc=12.1
+  - cuda-version=12.1
+  - torchvision
+  - pip
+  - pytorch-scatter
+  - tqdm
