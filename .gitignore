@@ -9,3 +9,4 @@ models/
 **/*.so
 scripts/
 datasets/
+input_models/
