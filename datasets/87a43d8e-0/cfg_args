@@ -1,1 +1,0 @@
-Namespace(data_device='cuda', eval=False, images='images', model_path='./output/87a43d8e-0', resolution=8, sh_degree=3, source_path='/home/reinoutvos/Github/GaussSplat/gaussian-splatting/datasets/flowers', white_background=False)
