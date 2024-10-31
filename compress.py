@@ -148,102 +148,102 @@ def run_vq(
     end_time = time.time()
     timings["sensitivity_calculation"] = end_time-start_time
     # %%
-    # print("vq compression..")
-    # with torch.no_grad():
-    #     start_time = time.time()
-    #     color_importance_n = color_importance.amax(-1)
+    print("vq compression..")
+    with torch.no_grad():
+        start_time = time.time()
+        color_importance_n = color_importance.amax(-1)
 
-    #     gaussian_importance_n = gaussian_sensitivity.amax(-1)
+        gaussian_importance_n = gaussian_sensitivity.amax(-1)
 
-    #     torch.cuda.empty_cache()
+        torch.cuda.empty_cache()
 
-    #     color_compression_settings = CompressionSettings(
-    #         codebook_size=comp_params.color_codebook_size,
-    #         importance_prune=comp_params.color_importance_prune,
-    #         importance_include=comp_params.color_importance_include,
-    #         steps=int(comp_params.color_cluster_iterations),
-    #         decay=comp_params.color_decay,
-    #         batch_size=comp_params.color_batch_size,
-    #     )
+        color_compression_settings = CompressionSettings(
+            codebook_size=comp_params.color_codebook_size,
+            importance_prune=comp_params.color_importance_prune,
+            importance_include=comp_params.color_importance_include,
+            steps=int(comp_params.color_cluster_iterations),
+            decay=comp_params.color_decay,
+            batch_size=comp_params.color_batch_size,
+        )
 
-    #     gaussian_compression_settings = CompressionSettings(
-    #         codebook_size=comp_params.gaussian_codebook_size,
-    #         importance_prune=None,
-    #         importance_include=comp_params.gaussian_importance_include,
-    #         steps=int(comp_params.gaussian_cluster_iterations),
-    #         decay=comp_params.gaussian_decay,
-    #         batch_size=comp_params.gaussian_batch_size,
-    #     )
+        gaussian_compression_settings = CompressionSettings(
+            codebook_size=comp_params.gaussian_codebook_size,
+            importance_prune=None,
+            importance_include=comp_params.gaussian_importance_include,
+            steps=int(comp_params.gaussian_cluster_iterations),
+            decay=comp_params.gaussian_decay,
+            batch_size=comp_params.gaussian_batch_size,
+        )
 
-    #     compress_gaussians(
-    #         gaussians,
-    #         color_importance_n,
-    #         gaussian_importance_n,
-    #         color_compression_settings if not comp_params.not_compress_color else None,
-    #         gaussian_compression_settings
-    #         if not comp_params.not_compress_gaussians
-    #         else None,
-    #         comp_params.color_compress_non_dir,
-    #         prune_threshold=comp_params.prune_threshold,
-    #     )
-    #     end_time = time.time()
-    #     timings["clustering"]=end_time-start_time
+        compress_gaussians(
+            gaussians,
+            color_importance_n,
+            gaussian_importance_n,
+            color_compression_settings if not comp_params.not_compress_color else None,
+            gaussian_compression_settings
+            if not comp_params.not_compress_gaussians
+            else None,
+            comp_params.color_compress_non_dir,
+            prune_threshold=comp_params.prune_threshold,
+        )
+        end_time = time.time()
+        timings["clustering"]=end_time-start_time
 
-    # gc.collect()
-    # torch.cuda.empty_cache()
-    # os.makedirs(comp_params.output_vq, exist_ok=True)
+    gc.collect()
+    torch.cuda.empty_cache()
+    os.makedirs(comp_params.output_vq, exist_ok=True)
 
-    # copyfile(
-    #     path.join(model_params.model_path, "cfg_args"),
-    #     path.join(comp_params.output_vq, "cfg_args"),
-    # )
-    # model_params.model_path = comp_params.output_vq
+    copyfile(
+        path.join(model_params.model_path, "cfg_args"),
+        path.join(comp_params.output_vq, "cfg_args"),
+    )
+    model_params.model_path = comp_params.output_vq
 
-    # with open(
-    #     os.path.join(comp_params.output_vq, "cfg_args_comp"), "w"
-    # ) as cfg_log_f:
-    #     cfg_log_f.write(str(Namespace(**vars(comp_params))))
+    with open(
+        os.path.join(comp_params.output_vq, "cfg_args_comp"), "w"
+    ) as cfg_log_f:
+        cfg_log_f.write(str(Namespace(**vars(comp_params))))
 
-    # iteration = scene.loaded_iter + comp_params.finetune_iterations
-    # if comp_params.finetune_iterations > 0:
+    iteration = scene.loaded_iter + comp_params.finetune_iterations
+    if comp_params.finetune_iterations > 0:
 
-    #     start_time = time.time()
-    #     finetune(
-    #         scene,
-    #         model_params,
-    #         optim_params,
-    #         comp_params,
-    #         pipeline_params,
-    #         testing_iterations=[
-    #             -1
-    #         ],
-    #         debug_from=-1,
-    #     )
-    #     end_time = time.time()
-    #     timings["finetune"]=end_time-start_time
+        start_time = time.time()
+        finetune(
+            scene,
+            model_params,
+            optim_params,
+            comp_params,
+            pipeline_params,
+            testing_iterations=[
+                -1
+            ],
+            debug_from=-1,
+        )
+        end_time = time.time()
+        timings["finetune"]=end_time-start_time
 
-    #     # %%
-    # out_file = path.join(
-    #     comp_params.output_vq,
-    #     f"point_cloud/iteration_{iteration}/point_cloud.npz",
-    # )
-    # start_time = time.time()
-    # gaussians.save_npz(out_file, sort_morton=not comp_params.not_sort_morton)
-    # end_time = time.time()
-    # timings["encode"]=end_time-start_time
-    # timings["total"]=sum(timings.values())
-    # with open(f"{comp_params.output_vq}/times.json","w") as f:
-    #     json.dump(timings,f)
-    # file_size = os.path.getsize(out_file) / 1024**2
-    # print(f"saved vq finetuned model to {out_file}")
+        # %%
+    out_file = path.join(
+        comp_params.output_vq,
+        f"point_cloud/iteration_{iteration}/point_cloud.npz",
+    )
+    start_time = time.time()
+    gaussians.save_npz(out_file, sort_morton=not comp_params.not_sort_morton)
+    end_time = time.time()
+    timings["encode"]=end_time-start_time
+    timings["total"]=sum(timings.values())
+    with open(f"{comp_params.output_vq}/times.json","w") as f:
+        json.dump(timings,f)
+    file_size = os.path.getsize(out_file) / 1024**2
+    print(f"saved vq finetuned model to {out_file}")
 
-    # # eval model
-    # print("evaluating...")
-    # metrics = render_and_eval(gaussians, scene, model_params, pipeline_params)
-    # metrics["size"] = file_size
-    # print(metrics)
-    # with open(f"{comp_params.output_vq}/results.json","w") as f:
-    #     json.dump({f"ours_{iteration}":metrics},f,indent=4)
+    # eval model
+    print("evaluating...")
+    metrics = render_and_eval(gaussians, scene, model_params, pipeline_params)
+    metrics["size"] = file_size
+    print(metrics)
+    with open(f"{comp_params.output_vq}/results.json","w") as f:
+        json.dump({f"ours_{iteration}":metrics},f,indent=4)
 
 if __name__ == "__main__":
     parser = ArgumentParser(description="Compression script parameters")
