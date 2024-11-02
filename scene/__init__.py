@@ -127,6 +127,12 @@ class Scene:
 
     def getTrainCameras(self, scale=1.0):
         return self.train_cameras[scale]
+    
+    def getTrainCamerasExceptVis(self, scale=1.0):
+        return self.train_cameras[scale][1:]
+    
+    def getVisCamera(self, scale=1.0):
+        return self.train_cameras[scale][0]
 
     def getTestCameras(self, scale=1.0):
         return self.test_cameras[scale]
