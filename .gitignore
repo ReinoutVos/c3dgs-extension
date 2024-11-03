@@ -8,3 +8,7 @@ models/
 **/build/
 **/*.so
 scripts/
+
+datasets/
+input_models/
+output/
