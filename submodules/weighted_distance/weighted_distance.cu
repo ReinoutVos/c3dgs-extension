@@ -91,3 +91,52 @@ std::tuple<torch::Tensor, torch::Tensor> weightedDistanceCUDA(
 
   return std::make_tuple(min_distances, min_idx);
 }
+
+
+
+// Added: K-means++ distance computation in CUDA
+__global__ void kmeans_plus_plus_distance_update(
+    const int N, const int K, const int C,
+    const float *data_points,
+    const float *centroids,
+    float *min_dists) {
+
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= N) return;
+
+    float min_distance = min_dists[idx];
+    for (int i = 0; i < C; i++) {
+        float dist = 0.0f;
+        for (int j = 0; j < K; j++) {
+            float diff = data_points[idx * K + j] - centroids[i * K + j];
+            dist += diff * diff;
+        }
+        min_distance = fminf(min_distance, dist);
+    }
+    min_dists[idx] = min_distance;
+}
+
+torch::Tensor kmeansPlusPlusDistanceCUDA(
+    const torch::Tensor &data_points,
+    const torch::Tensor &centroids) {
+
+    const int N = data_points.size(0);
+    const int C = centroids.size(0);
+    const int K = data_points.size(1);
+
+    auto float_opts = data_points.options().dtype(torch::kFloat32);
+    torch::Tensor min_distances = torch::full({N}, FLT_MAX, float_opts);
+
+    int threads_per_block = 256;
+    int num_blocks = (N + threads_per_block - 1) / threads_per_block;
+
+    kmeans_plus_plus_distance_update<<<num_blocks, threads_per_block>>>(
+        N, K, C,
+        data_points.contiguous().data_ptr<float>(),
+        centroids.contiguous().data_ptr<float>(),
+        // target tensor
+        min_distances.data_ptr<float>()
+    );
+
+    return min_distances;
+}

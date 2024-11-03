@@ -9,7 +9,7 @@ from tqdm import trange
 import gc
 from scene.gaussian_model import GaussianModel
 from utils.splats import to_full_cov, extract_rot_scale
-from weighted_distance._C import weightedDistance
+from weighted_distance._C import weightedDistance, kmeansPlusPlusDistance
 
 
 class VectorQuantize(nn.Module):
@@ -21,6 +21,7 @@ class VectorQuantize(nn.Module):
     ) -> None:
         super().__init__()
         self.decay = decay
+        self.codebook_size = codebook_size
         self.codebook = nn.Parameter(
             torch.empty(codebook_size, channels), requires_grad=False
         )
@@ -33,6 +34,43 @@ class VectorQuantize(nn.Module):
     def uniform_init(self, x: torch.Tensor):
         amin, amax = x.aminmax()
         self.codebook.data = torch.rand_like(self.codebook) * (amax - amin) + amin
+
+    def kmeanspp_init_batch(self, x, vq_chunk=2**7, batch_size_centroids=10):
+        # Implementation of the k-means++ algorithm (from: https://en.wikipedia.org/wiki/K-means%2B%2B)
+        selected_centers = torch.empty((self.codebook_size, x.size(1)), device=x.device)
+        
+        # Step 1: Choose one center uniformly at random among the data points
+        first_idx = torch.randint(0, x.size(0), (1,))
+        selected_centers[0] = x[first_idx]
+        
+        # Tensor to store the minimum distances to the nearest center, initialized to infinity
+        min_distances = torch.full((x.size(0),), float('inf'), device=x.device)
+        
+        for i in range(1, self.codebook_size, batch_size_centroids):
+            # Sample a batch of data points
+            batch_indices = torch.randint(0, x.size(0), (vq_chunk,), device=x.device)
+            batch_data = x[batch_indices]
+            
+            # Select `batch_size_centroids` new centers in each iteration
+            for j in range(batch_size_centroids):
+                if i + j >= self.codebook_size:
+                    break
+                
+                # Step 2: For each data point x not chosen yet, compute D(x), 
+                # the distance between x and the nearest center that has already been chosen.
+                current_selected = selected_centers[:i+j].contiguous()
+                new_min_dists = kmeansPlusPlusDistance(batch_data.detach(), current_selected.detach())
+                min_distances[batch_indices] = torch.min(min_distances[batch_indices], new_min_dists)
+                
+                # Step 3: Choose one new data point at random as a new center, 
+                # using a weighted probability distribution where a point x is chosen with probability proportional to D(x)2.
+                squared_min_dists = min_distances[batch_indices] ** 2
+                probs = squared_min_dists / squared_min_dists.sum()
+                next_center_idx = batch_indices[torch.multinomial(probs, 1)]
+                selected_centers[i + j] = x[next_center_idx]
+
+        # Copy the selected centers to the codebook (final list of centroids)
+        self.codebook.data.copy_(selected_centers)
 
     def update(self, x: torch.Tensor, importance: torch.Tensor) -> torch.Tensor:
         with torch.no_grad():
