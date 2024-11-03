@@ -9,13 +9,13 @@ from IPython.display import HTML
 
 
 def color_shape_sensitivity_hist(color_importance_norm, gaussian_sensitivity_norm, color_threshold, gaussian_threshold, num_bins=20):
+    # Check if features are on CPU
     if color_importance_norm.device != torch.device('cpu'):
         color_importance_norm = color_importance_norm.cpu().numpy()
 
     if gaussian_sensitivity_norm.device != torch.device('cpu'):
         gaussian_sensitivity_norm = gaussian_sensitivity_norm.cpu().numpy()
 
-    # Plotting
     _, axes = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
 
     # Color sensitivity histogram
@@ -29,7 +29,6 @@ def color_shape_sensitivity_hist(color_importance_norm, gaussian_sensitivity_nor
     axes[0].set_title("Color Sensitivity Distribution")
     axes[0].set_xlabel("Sensitivity")
     axes[0].set_ylabel("Density")
-    # axes[0].set_yscale("log")
 
     # Shape sensitivity histogram
     axes[1].hist(
@@ -96,12 +95,15 @@ def scatterplot_prune_gaussians(pos_prune, pos_keep, non_prune_mask):
 
 
 def plot_features_pca(features=[], label="Features", title="2D Projection of Features"):
+    # Check if features are on CPU
     if features.device != torch.device('cpu'):
         features = features.cpu().numpy()
 
+    # Reduce to 2 dimensions using PCA
     pca = PCA(n_components=2)
     features_2d = pca.fit_transform(features)
 
+    # Create 2D scatter plot
     plt.figure(figsize=(10, 8))
     plt.scatter(features_2d[:, 0], features_2d[:, 1], s=1, alpha=0.5, color='blue', label=label)
     
@@ -114,6 +116,7 @@ def plot_features_pca(features=[], label="Features", title="2D Projection of Fea
 
 
 def plot_features_3d(features, label="Features", title="3D Features", elev=30, azim=120):
+    # Check if features are on CPU
     if features.device != torch.device('cpu'):
         features = features.cpu().numpy()
 
@@ -127,7 +130,6 @@ def plot_features_3d(features, label="Features", title="3D Features", elev=30, a
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter(x, y, z, s=1, alpha=0.5, color='green', label=label)
 
-    # Set labels and title
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_zlabel("Z")
@@ -141,10 +143,11 @@ def plot_features_3d(features, label="Features", title="3D Features", elev=30, a
 
 
 def animate_feature_clustering(features, centroids_history, title="Features Clustering Animation", step_size=1):
+    # Check if features are on CPU
     if features.device != torch.device('cpu'):
         features = features.cpu().numpy()
 
-    # Reduce features to 2D for plotting
+    # Reduce to 2 dimensions using PCA
     pca = PCA(n_components=2)
     features_2d = pca.fit_transform(features)
     
@@ -154,7 +157,7 @@ def animate_feature_clustering(features, centroids_history, title="Features Clus
     ax.scatter(features_2d[:, 0], features_2d[:, 1], s=1, alpha=0.5, color='blue', label="Features")
     
     # Initial scatter plot for centroids (updated in each frame)
-    centroids_2d = pca.transform(centroids_history[0])  # Initial centroids
+    centroids_2d = pca.transform(centroids_history[0])
     centroids_plot, = ax.plot(centroids_2d[:, 0], centroids_2d[:, 1], 'ro', markersize=1, label="Centroids")
 
     ax.set_title(title)
@@ -169,9 +172,7 @@ def animate_feature_clustering(features, centroids_history, title="Features Clus
         ax.set_title(f"{title} - Iteration {frame * step_size}")
         return centroids_plot,
 
-    # Create animation
     ani = FuncAnimation(fig, update, frames=len(centroids_history), interval=500, blit=True)
-    # plt.show()
     display(HTML(ani.to_jshtml()))
 
     return ani
@@ -179,7 +180,7 @@ def animate_feature_clustering(features, centroids_history, title="Features Clus
 
 
 def animate_feature_clustering_3d(features, centroids_history, title="3D Features Clustering Animation", step_size=1, elev=30, azim=120):
-    # Ensure features are on the CPU and convert to numpy if needed
+    # Check if features are on CPU
     if features.device != torch.device('cpu'):
         features = features.cpu().numpy()
 
@@ -188,22 +189,20 @@ def animate_feature_clustering_3d(features, centroids_history, title="3D Feature
     y = features[:, 1]
     z = features[:, 2]
     
-    # Set up the figure and 3D axis
     fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111, projection='3d')
     
-    # Plot the initial features as a static background
+    # Scatter plot of features (fixed throughout the animation)
     ax.scatter(x, y, z, s=1, alpha=0.5, color='green', label="Scaling Features")
     
     # Set initial view angle
     ax.view_init(elev=elev, azim=azim)
     
-    # Initialize centroid plot (updated each frame)
+    # Initial scatter plot for centroids (updated in each frame)
     centroids_3d = centroids_history[0]
     centroids_plot = ax.scatter(centroids_3d[:, 0], centroids_3d[:, 1], centroids_3d[:, 2], 
                                 c='red', s=20, label="Centroids")
 
-    # Set labels and title
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_zlabel("Z")
@@ -211,13 +210,12 @@ def animate_feature_clustering_3d(features, centroids_history, title="3D Feature
     ax.legend()
 
     def update(frame):
-        # Update centroids plot for the current frame
+        # Update centroids plot in each frame
         centroids_3d = centroids_history[frame]
         centroids_plot._offsets3d = (centroids_3d[:, 0], centroids_3d[:, 1], centroids_3d[:, 2])
         ax.set_title(f"{title} - Iteration {frame * step_size}")
         return centroids_plot,
 
-    # Create animation
     ani = FuncAnimation(fig, update, frames=len(centroids_history), interval=500, blit=True)
     display(HTML(ani.to_jshtml()))
 
@@ -226,18 +224,19 @@ def animate_feature_clustering_3d(features, centroids_history, title="3D Feature
 
 
 def plot_features_and_compressed(features, compressed_features, label_f1="Feature 1", label_f2="Feature 2", title="Original and Compressed Features"):
+    # Check if features are on CPU
     if features.device != torch.device('cpu'):
         features = features.cpu().numpy()
 
     if compressed_features.device != torch.device('cpu'):
         compressed_features = compressed_features.cpu().numpy()
 
-    # Reduce features to 2D using PCA for visualization
+    # Reduce to 2 dimensions using PCA
     pca = PCA(n_components=2)
     all_features_2d = pca.fit_transform(features)
     compressed_features_2d = pca.transform(compressed_features)
 
-    # Plot all features and compressed features
+    # Create 2D scatter plot
     plt.figure(figsize=(10, 8))
     plt.scatter(all_features_2d[:, 0], all_features_2d[:, 1], s=1, alpha=0.5, color='blue', label=label_f1)
     plt.scatter(compressed_features_2d[:, 0], compressed_features_2d[:, 1], s=1, color='red', label=label_f2)
@@ -251,6 +250,7 @@ def plot_features_and_compressed(features, compressed_features, label_f1="Featur
 
 
 def plot_features_and_compressed_3d(features, compressed_features, label_f1="Feature 1", label_f2="Feature 2", title="Original and Compressed Features 3D", elev=30, azim=120):
+    # Check if features are on CPU
     if features.device != torch.device('cpu'):
         features = features.cpu().numpy()
 
@@ -272,7 +272,6 @@ def plot_features_and_compressed_3d(features, compressed_features, label_f1="Fea
     ax.scatter(x, y, z, s=1, alpha=0.1, color='blue', label=label_f1)
     ax.scatter(c_x, c_y, c_z, s=1, alpha=0.1, color='red', label=label_f2)
 
-    # Set labels and title
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_zlabel("Z")
@@ -306,13 +305,12 @@ def animate_training_renders(rendered_images):
     ax.set_title("Rendered Image Animation")
 
     def update(frame):
+        # Update image each frame
         img_display.set_data(rendered_images[frame])
         ax.set_title(f"Rendered Image - Frame {frame + 1}")
         return img_display,
 
-    # Create animation
     ani = FuncAnimation(fig, update, frames=len(rendered_images), interval=500, blit=True)
-    
     display(HTML(ani.to_jshtml()))
     
     return ani
@@ -340,7 +338,6 @@ def plot_finetune_losses(losses=[], window_size=100):
         trend_iterations = range(len(moving_average))
         plt.plot(trend_iterations, moving_average, label='Trend line (Moving Average)', color='orange', linewidth=2)
     
-    # Labels and title
     plt.xlabel('Iteration')
     plt.ylabel('Finetuning loss')
     plt.title('Finetuning loss Over Iterations')
@@ -366,7 +363,7 @@ def visualise_timings(timings=[]):
 def visualise_storage_metrics(sizes=[]):
     labels = ['Input Model', 'Compressed Model']
 
-    # Plot
+    # Bar plot
     plt.figure(figsize=(8, 6))
     bars = plt.bar(labels, sizes, color=['skyblue', 'orange'])
     plt.ylabel("Size (MB)")
