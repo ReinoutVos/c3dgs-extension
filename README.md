@@ -1,5 +1,7 @@
 <div align="center">
 
+** Mostly copied from https://github.com/KeKsBoTer/c3dgs ** 
+
 # Compressed 3D Gaussian Splatting for Accelerated Novel View Synthesis
 
 
@@ -34,6 +36,20 @@ If you find our work useful, please cite:
 }
 ```
 
+### New: Visualization
+
+In order to inspect the compression pipeline, look at the `compress_visualise.ipynb` file.
+This file also contains the implementations of the K-Means++ and the spatial redundancy pruning algorithms.
+Plot and utility functions can be found in the `visualisation` folder.
+
+### New: Datasets
+
+To run the compression pipeline a pre-trained model and a corresponding dataset are required.
+Pre-trained models can be downloaded from the [original 3D Gaussian Splatting repository](https://github.com/graphdeco-inria/gaussian-splatting).
+Datasets can be downloaded from the [Mip-NeRF 360 webpage](https://jonbarron.info/mipnerf360/).
+I used the pre-trained 'flowers' model and dataset.
+
+
 ## Installation
 
 ### Requirements
@@ -48,7 +64,7 @@ Please refer to the [original 3D Gaussian Splatting repository](https://github.c
 
 ### Cloning the Repository
 ```
-git clone https://github.com/KeKsBoTer/c3gds
+git clone https://github.com/ReinoutVos/c3dgs-extension
 ```
 
 ### Setup 
@@ -58,7 +74,7 @@ Our default, provided install method is based on Conda package and environment m
 ```
 SET DISTUTILS_USE_SDK=1 # Windows only
 conda env create --file environment.yml
-conda activate c3dgs
+conda activate c3dgs_extension
 ```
 
 ### Running 

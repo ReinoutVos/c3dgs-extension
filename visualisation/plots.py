@@ -95,7 +95,7 @@ def scatterplot_prune_gaussians(pos_prune, pos_keep, non_prune_mask):
 
 
 
-def plot_features_pca(features=[], label="Features"):
+def plot_features_pca(features=[], label="Features", title="2D Projection of Features"):
     if features.device != torch.device('cpu'):
         features = features.cpu().numpy()
 
@@ -105,7 +105,7 @@ def plot_features_pca(features=[], label="Features"):
     plt.figure(figsize=(10, 8))
     plt.scatter(features_2d[:, 0], features_2d[:, 1], s=1, alpha=0.5, color='blue', label=label)
     
-    plt.title("")
+    plt.title(title)
     plt.xlabel("Component 1")
     plt.ylabel("Component 2")
     plt.legend()
@@ -113,7 +113,7 @@ def plot_features_pca(features=[], label="Features"):
 
 
 
-def plot_features_3d(features, title="3D Features", elev=30, azim=120):
+def plot_features_3d(features, label="Features", title="3D Features", elev=30, azim=120):
     if features.device != torch.device('cpu'):
         features = features.cpu().numpy()
 
@@ -125,7 +125,7 @@ def plot_features_3d(features, title="3D Features", elev=30, azim=120):
     # Create 3D scatter plot
     fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(x, y, z, s=1, alpha=0.5, color='green', label="Scaling Features")
+    ax.scatter(x, y, z, s=1, alpha=0.5, color='green', label=label)
 
     # Set labels and title
     ax.set_xlabel("X")
@@ -140,7 +140,7 @@ def plot_features_3d(features, title="3D Features", elev=30, azim=120):
 
 
 
-def animate_feature_clustering(features, centroids_history, title="Features Clustering Animation"):
+def animate_feature_clustering(features, centroids_history, title="Features Clustering Animation", step_size=1):
     if features.device != torch.device('cpu'):
         features = features.cpu().numpy()
 
@@ -166,7 +166,7 @@ def animate_feature_clustering(features, centroids_history, title="Features Clus
         # Update centroids plot in each frame
         centroids_2d = pca.transform(centroids_history[frame])
         centroids_plot.set_data(centroids_2d[:, 0], centroids_2d[:, 1])
-        ax.set_title(f"{title} - Iteration {frame + 1}")
+        ax.set_title(f"{title} - Iteration {frame * step_size}")
         return centroids_plot,
 
     # Create animation
@@ -178,7 +178,7 @@ def animate_feature_clustering(features, centroids_history, title="Features Clus
 
 
 
-def animate_feature_clustering_3d(features, centroids_history, title="3D Features Clustering Animation", elev=30, azim=120):
+def animate_feature_clustering_3d(features, centroids_history, title="3D Features Clustering Animation", step_size=1, elev=30, azim=120):
     # Ensure features are on the CPU and convert to numpy if needed
     if features.device != torch.device('cpu'):
         features = features.cpu().numpy()
@@ -214,7 +214,7 @@ def animate_feature_clustering_3d(features, centroids_history, title="3D Feature
         # Update centroids plot for the current frame
         centroids_3d = centroids_history[frame]
         centroids_plot._offsets3d = (centroids_3d[:, 0], centroids_3d[:, 1], centroids_3d[:, 2])
-        ax.set_title(f"{title} - Iteration {frame + 1}")
+        ax.set_title(f"{title} - Iteration {frame * step_size}")
         return centroids_plot,
 
     # Create animation
@@ -225,7 +225,7 @@ def animate_feature_clustering_3d(features, centroids_history, title="3D Feature
 
 
 
-def plot_features_and_compressed(features, compressed_features, title="Original and Compressed Features"):
+def plot_features_and_compressed(features, compressed_features, label_f1="Feature 1", label_f2="Feature 2", title="Original and Compressed Features"):
     if features.device != torch.device('cpu'):
         features = features.cpu().numpy()
 
@@ -239,8 +239,8 @@ def plot_features_and_compressed(features, compressed_features, title="Original 
 
     # Plot all features and compressed features
     plt.figure(figsize=(10, 8))
-    plt.scatter(all_features_2d[:, 0], all_features_2d[:, 1], s=1, alpha=0.5, color='blue', label="All Features")
-    plt.scatter(compressed_features_2d[:, 0], compressed_features_2d[:, 1], s=1, color='red', label="Compressed Features")
+    plt.scatter(all_features_2d[:, 0], all_features_2d[:, 1], s=1, alpha=0.5, color='blue', label=label_f1)
+    plt.scatter(compressed_features_2d[:, 0], compressed_features_2d[:, 1], s=1, color='red', label=label_f2)
     
     plt.title(title)
     plt.xlabel("Component 1")
@@ -250,7 +250,7 @@ def plot_features_and_compressed(features, compressed_features, title="Original 
 
 
 
-def plot_features_and_compressed_3d(features, compressed_features, title="Original and Compressed Features 3D", elev=30, azim=120):
+def plot_features_and_compressed_3d(features, compressed_features, label_f1="Feature 1", label_f2="Feature 2", title="Original and Compressed Features 3D", elev=30, azim=120):
     if features.device != torch.device('cpu'):
         features = features.cpu().numpy()
 
@@ -269,8 +269,8 @@ def plot_features_and_compressed_3d(features, compressed_features, title="Origin
     # Create 3D scatter plot
     fig = plt.figure(figsize=(10, 8))
     ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(x, y, z, s=1, alpha=0.1, color='blue', label="Scaling Features")
-    ax.scatter(c_x, c_y, c_z, s=1, alpha=0.1, color='red', label="Scaling Features")
+    ax.scatter(x, y, z, s=1, alpha=0.1, color='blue', label=label_f1)
+    ax.scatter(c_x, c_y, c_z, s=1, alpha=0.1, color='red', label=label_f2)
 
     # Set labels and title
     ax.set_xlabel("X")
@@ -285,13 +285,13 @@ def plot_features_and_compressed_3d(features, compressed_features, title="Origin
 
 
 
-def plot_error_curve(errors=[]):
+def plot_error_curve(errors=[], label=""):
     plt.figure(figsize=(10, 6))
-    plt.plot(errors, label='Quantization Error')
+    plt.plot(errors, label=f"{label} Quantization Error")
     plt.yscale('log')
     plt.xlabel('Iteration')
     plt.ylabel('Quantization Error')
-    plt.title('Quantization Error Over Iterations')
+    plt.title(f"{label} Quantization Error Over Iterations")
     plt.legend()
     plt.grid(True)
     plt.show()
