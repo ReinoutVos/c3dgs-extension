@@ -37,17 +37,15 @@ If you find our work useful, please cite:
 ```
 
 ### New: Visualization
-
 In order to inspect the compression pipeline, look at the `compress_visualise.ipynb` file.
 This file also contains the implementations of the K-Means++ and the spatial redundancy pruning algorithms.
 Plot and utility functions can be found in the `visualisation` folder.
 
 ### New: Datasets
-
 To run the compression pipeline a pre-trained model and a corresponding dataset are required.
 Pre-trained models can be downloaded from the [original 3D Gaussian Splatting repository](https://github.com/graphdeco-inria/gaussian-splatting).
 Datasets can be downloaded from the [Mip-NeRF 360 webpage](https://jonbarron.info/mipnerf360/).
-I used the pre-trained 'flowers' model and dataset.
+I used the pre-trained 'flowers' & 'bicycle' model and dataset.
 
 
 ## Installation
